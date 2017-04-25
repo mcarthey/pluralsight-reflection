@@ -19,6 +19,16 @@ namespace ReflectIt
             {
                 Console.Write("[{0}]", arg.Name);
             }
+
+            // typically would work except for the fact that the "Speak" method is generic 
+            var employee = new Employee();
+            var employeeType = typeof(Employee);
+            var methodInfo = employeeType.GetMethod("Speak");
+            // MakeGenericMethod
+            // eg. Speak<> + MakeGenericMethod(typeof(DateTime)) = Speak<DateTime>
+            methodInfo = methodInfo.MakeGenericMethod(typeof(DateTime));
+            methodInfo.Invoke(employee, null);
+
         }
 
         /// <summary>
@@ -40,6 +50,10 @@ namespace ReflectIt
     {
         public string Name { get; set; }
 
+        public void Speak<T>()
+        {
+            Console.WriteLine(typeof(T).Name);
+        }
     }
 
 }
