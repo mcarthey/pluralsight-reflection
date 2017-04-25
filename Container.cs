@@ -39,9 +39,42 @@ namespace ReflectIt
             if (_map.ContainsKey(sourceType))
             {
                 var destinationType = _map[sourceType];
-                return Activator.CreateInstance(destinationType);
+                return CreateInstance(destinationType);
+            }
+            else if (sourceType.IsGenericType && _map.ContainsKey(sourceType.GetGenericTypeDefinition()))
+            {
+                // IRepository<Customer> + GetGenericTypeDefinition = IRespository<>
+                var destination = _map[sourceType.GetGenericTypeDefinition()];
+                // SqlRepository<> + MakeGenericType(typeof(Customer)) = SqlRepository<Customer>
+                var closedDestination = destination.MakeGenericType(sourceType.GenericTypeArguments);
+                return CreateInstance(closedDestination);
+            }
+            // essentially if the resolver is asking for a concrete type just go ahead and call the constructor
+            else if (!sourceType.IsAbstract)
+            {
+                return CreateInstance(sourceType);
             }
             throw new InvalidOperationException("Could not resolve " + sourceType.FullName);
+        }
+
+        /// <summary>
+        /// Create instance of destination type
+        /// </summary>
+        /// <param name="destinationType"></param>
+        /// <returns></returns>
+        private object CreateInstance(Type destinationType)
+        {
+            // Find out which constructors are available
+            // If container can create instance (in Select() projection) get a list of parameters that the object can pass to the constructor
+            var parameters = destinationType.GetConstructors()
+                .OrderByDescending(c => c.GetParameters().Length)
+                .First()
+                .GetParameters()
+                .Select(p => Resolve(p.ParameterType))
+                .ToArray();
+
+
+            return Activator.CreateInstance(destinationType, parameters);
         }
 
         public class ContainerBuilder

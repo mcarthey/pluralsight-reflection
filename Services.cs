@@ -29,9 +29,17 @@ namespace ReflectIt
         }
     }
 
+    public class Customer { }
+
     public class InvoiceService
     {
-        public InvoiceService(IRepository<Employee> repository, ILogger logger)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="repository">eg. Repository of type Employee or Customer</param>
+        /// <param name="logger"></param>
+        /// <remarks>The concrete constructor could ask for any IRepository<></remarks>
+        public InvoiceService(IRepository<Customer> repository, ILogger logger)
         {
             
         }
